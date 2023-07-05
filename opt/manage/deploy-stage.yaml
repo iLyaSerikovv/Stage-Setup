@@ -267,4 +267,10 @@
       state: present
       reload: true
 
+  # Install PHP7.4 Composer
+  - name: install composer
+    shell: curl -sS https://getcomposer.org/installer | php7.4 -- --install-dir=/usr/local/bin --filename=composer
+    args:
+      creates: /usr/local/bin/composer
+
   - meta: end_play
