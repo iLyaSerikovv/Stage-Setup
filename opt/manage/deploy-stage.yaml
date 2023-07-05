@@ -1,0 +1,270 @@
+## Gather NGINX Repo Key
+#- set_fact:
+#     repoid: nginx
+#     repo_key_url: https://nginx.org/keys/nginx_signing.key
+#     repo_sources_list_url: "https://nginx.org/packages/debian {{ ansible_distribution_releae }} nginx"
+
+- name: Deploy Stage
+  hosts: stage
+  gather_facts: yes
+  become: yes
+
+  tasks:
+  - name: Create User
+    ansible.builtin.user:
+      name: debian
+      password: "{{ lookup('ansible.builtin.password', '/root/debian.password', chars=['ascii_letters', 'digits', 'punctuation']) }}"
+      group: sudo
+      shell: /bin/bash
+      state: present
+
+  - name: Set Timezone
+    community.general.timezone:
+      name: Etc/GMT
+
+  # Configure Source Lists
+  # Configure apt keys
+  - name: Add NGINX Apt Signung Key
+    ansible.builtin.apt_key:
+      url: "https://nginx.org/keys/nginx_signing.key"
+      state: present
+
+  - name: Add Node Apt Signung Key
+    ansible.builtin.apt_key:
+      url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+      state: present
+
+  - name: Add PHP Apt Signung Key
+    ansible.builtin.apt_key:
+      url: "https://packages.sury.org/php/apt.gpg"
+      state: present
+
+  # Add Repos
+  - name: Add Node Repository To Sources List
+    ansible.builtin.apt_repository:
+      repo: "deb https://deb.nodesource.com/node_14.x {{ ansible_distribution_release }} main"
+      state: present
+
+  - name: Add NGINX Repository To Sources List
+    ansible.builtin.apt_repository:
+      repo: "deb http://nginx.org/packages/debian/ {{ ansible_distribution_release }} nginx"
+      state: present
+
+  - name: Add NGINX Sources Repository To Sources List
+    ansible.builtin.apt_repository:
+      repo: "deb-src http://nginx.org/packages/debian/ {{ ansible_distribution_release }} nginx"
+      state: present
+
+  - name: Add PHP Repository To Sources List
+    ansible.builtin.apt_repository:
+      repo: "deb https://packages.sury.org/php {{ ansible_distribution_release }} main"
+      update_cache: true
+      state: present
+
+  - name: Install Syetem Package Dependency
+    ansible.builtin.apt:
+      state: latest
+      update-cache: yes
+      pkg:
+        - libfreetype6
+        - libfreetype6-dev
+        - zlib1g
+        - zlib1g-dev
+        - libxml2
+        - libxml2-dev
+        - bind9
+        - libxslt1-dev
+        - libxslt1.1
+        - gcc
+        - curl
+        - make
+        - libcurl4-openssl-dev
+        - libssl-dev
+        - mc
+        - wget
+        - aptitude
+        - unzip
+        - htop
+        - nload
+        - libffi-dev
+        - gnupg2
+        - pkg-config
+        - tcl
+        - git
+        - sendmail
+        - openssl
+        # Change to python3-setuptools
+        - python3-setuptools
+        - screen
+        - ethtool
+        - net-tools
+        - snoopy
+        - gconf-service
+        - libasound2
+        - libatk1.0-0
+        - libcairo2
+        - libcups2
+        - libfontconfig1
+        - libgdk-pixbuf2.0-0
+        - libgtk-3-0
+        - libnspr4
+        - libpango-1.0-0
+        - libxss1
+        - fonts-liberation
+        - libnss3
+        - lsb-release
+        - xdg-utils
+        - default-mysql-client
+        # NodeJS & npm
+        - nodejs
+        - npm
+        # PHP Depth
+        - apt-transport-https
+        - lsb-release
+        - ca-certificates
+        # Nginx Depth
+        - nginx
+        # Sendmail Depth
+        - sendmail
+        # Reis Depth
+        # ToDo Install Redis-server 7.0.8 version 7.0.11 current
+        - redis
+
+  # Enable And Run NGINX Service
+  - name: Start nginx
+    ansible.builtin.systemd:
+      name: nginx
+      state: started
+      enabled: true
+      daemon_reload: true
+
+  # ToDo Install Python3-3.11.4 version 3.11.2 current
+  - name: Install Python Package Dependency
+    ansible.builtin.apt:
+      state: latest
+      update-cache: yes
+      pkg:
+        # Install Python3 Requirement
+        - python3
+        - python3-pip
+        - python3-virtualenv
+
+  # Install Nodejs Global Depth
+  - name: Install NodeJS Packages.
+    community.general.npm:
+      name: gulp-cli
+      global: true
+
+  # Install Nodejs Save-dev Depth
+  # ToDo Set flag save-dev for gulp
+  - name: Install NodeJS Packages.
+#    community.general.npm:
+#      name: gulp
+#      global: true
+    command: npm install gulp --save-dev
+
+  # Install PHP Depeth
+  - name: Install PHP Package Dependency
+    ansible.builtin.apt:
+      state: latest
+      update-cache: yes
+      pkg:
+        - php7.4
+        - php7.4-fpm
+        - php7.4-curl
+        - php7.4-common
+        - php7.4-dev
+        - php7.4-json
+        - php7.4-dev
+        - php7.4-mysqli
+        - php7.4-pdo
+        - php7.4-pdo-mysql
+        - php7.4-soap
+        - php7.4-mbstring
+        - php7.4-bcmath
+        - php7.4-gd
+        - php7.4-memcached
+        - php7.4-redis
+        - php7.4-xml
+        - php7.4-imap
+        - php7.4-ldap
+        - php7.4-intl
+        - php7.4-imagick
+        - php7.4-geoip
+        - php7.4-ssh2
+        - php8.2
+        - php8.2-fpm
+        - php8.2-curl
+        - php8.2-common
+        - php8.2-dev
+        - php8.2-dev
+        - php8.2-mysqli
+        - php8.2-pdo
+        - php8.2-pdo-mysql
+        - php8.2-soap
+        - php8.2-mbstring
+        - php8.2-bcmath
+        - php8.2-gd
+        - php8.2-memcached
+        - php8.2-redis
+        - php8.2-xml
+        - php8.2-imap
+        - php8.2-ldap
+        - php8.2-intl
+        - php8.2-imagick
+        - php8.2-ssh2
+
+  # Set DefaultLimitNOFILE in system.conf
+  - name: make sure we can open enough files
+    lineinfile: dest=/etc/systemd/system.conf
+      regexp="DefaultLimitNOFILE"
+      line="DefaultLimitNOFILE=65536"
+      state=present
+
+  # Set DefaultLimitNOFILE in user.conf
+  - name: make sure we can open enough files
+    lineinfile: dest=/etc/systemd/user.conf
+      regexp="DefaultLimitNOFILE"
+      line="DefaultLimitNOFILE=65536"
+      state=present
+
+  # Set OPENSSL_CONF in /etc/environment
+  - name: make sure we can open enough files
+    lineinfile: dest=/etc/environment
+      regexp="OPENSSL_CONF"
+      line="OPENSSL_CONF=/etc/ssl/"
+      state=present
+
+  # Set PAM limits
+  - name: Modify Nofile Soft Limits
+    community.general.pam_limits:
+      domain: '*'
+      limit_type: soft
+      limit_item: nofile
+      value: 6500536
+
+  - name: Modify Nofile Hard Limits
+    community.general.pam_limits:
+      domain: '*'
+      limit_type: soft
+      limit_item: nofile
+      value: 6500536
+
+  # Set Sysctl Params
+  - name: Set fs.file-max
+    ansible.posix.sysctl:
+      name: fs.file-max
+      value: '5000000'
+      sysctl_set: true
+      state: present
+      reload: true
+
+  - name: Set net.ipv4.ip_local_port_range
+    ansible.posix.sysctl:
+      name: net.ipv4.ip_local_port_range
+      value: '1024 65535'
+      sysctl_set: true
+      state: present
+      reload: true
+
+  - meta: end_play
